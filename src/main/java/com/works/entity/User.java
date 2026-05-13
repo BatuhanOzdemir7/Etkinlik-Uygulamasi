@@ -4,10 +4,21 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
+@Table(name = "users")
+/*
+H2 veritabanında "USER" kelimesi sistemin kendi işleyişi
+için ayrılmış özel bir komut (reserved keyword) olduğundan,
+veritabanı doğrudan bu isimde bir tablo oluşturmaya
+çalıştığında SQL sözdizimi hatası vererek çöker.
+Bu çakışmayı aşmak ve uygulamanın sorunsuz çalışmasını
+sağlamak için @Table(name = "users") anotasyonunu kullanarak
+tabloya sistem komutlarıyla karışmayacak güvenli bir isim atarız.
+ */
 @Data
 public class User {
 
     @Id
+
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer cid;
 
