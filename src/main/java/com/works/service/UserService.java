@@ -8,9 +8,12 @@ import org.springframework.stereotype.Service;
 import org.mindrot.jbcrypt.BCrypt;
 import org.modelmapper.ModelMapper;
 import com.works.dto.UserRegisterRequestDto;
+import com.works.dto.UserLoginRequestDto;
+import com.works.dto.UserResponseDto;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +32,29 @@ public class UserService {
         User user = modelMapper.map(userRegisterRequestDto, User.class);
         String hashPassword = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt());
         user.setPassword(hashPassword);
+        user.setEnabled(true);
+        /*
+        Projenin geliştirme aşamasında, temel fonksiyonların ve uçtan uca akışların hızlıca test edilebilmesi adına kullanıcı aktivasyon süreci geçici olarak otomatikleştirilmiştir.
+        Bu doğrultuda, UserService katmanında yapılan düzenlemeyle yeni kayıt olan tüm kullanıcıların enabled durumu varsayılan olarak true değerine atanmaktadır. Bu yaklaşım, e-posta
+        doğrulama gibi dış servislerin henüz entegre edilmediği bu fazda geliştirme verimliliğini artırmaktadır. Güvenlik protokolleri tamamlandığında, sistem gerçek senaryolara uygun olan
+        'onaylı kayıt' modeline geri çekilecektir.
+         */
         UserRepository.save(user);
         return ResponseEntity.ok().body(user);
+    }
+
+    // login
+    public ResponseEntity login(UserLoginRequestDto UserLoginRequestDto){
+        Optional<User> optionalUser = UserRepository.findByEnabledTrueAndEmailIgnoreCaseOrEnabledTrueAndPhoneIgnoreCase(UserLoginRequestDto.getUsername(), UserLoginRequestDto.getUsername());
+        if(optionalUser.isPresent()){
+            User User = optionalUser.get();
+            boolean isMatch = BCrypt.checkpw(UserLoginRequestDto.getPassword(), User.getPassword());
+            if(isMatch){
+                UserResponseDto UserResponseDto = modelMapper.map(User, UserResponseDto.class);
+                return ResponseEntity.ok().body(UserResponseDto);
+            }
+        }
+        Map<String, Object> hm = Map.of("success", false, "message", "Username or password is incorrect.");
+        return ResponseEntity.badRequest().body(hm);
     }
 }
