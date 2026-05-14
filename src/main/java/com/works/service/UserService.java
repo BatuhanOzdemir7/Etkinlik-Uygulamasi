@@ -2,6 +2,7 @@ package com.works.service;
 
 import com.works.entity.User;
 import com.works.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.util.Optional;
 public class UserService {
 
     final UserRepository UserRepository;
+    final HttpServletRequest request;
     ModelMapper modelMapper = new ModelMapper();
 
     public ResponseEntity register(UserRegisterRequestDto userRegisterRequestDto) {
@@ -50,8 +52,9 @@ public class UserService {
             User User = optionalUser.get();
             boolean isMatch = BCrypt.checkpw(UserLoginRequestDto.getPassword(), User.getPassword());
             if(isMatch){
-                UserResponseDto UserResponseDto = modelMapper.map(User, UserResponseDto.class);
-                return ResponseEntity.ok().body(UserResponseDto);
+                UserResponseDto userResponseDto = modelMapper.map(User, UserResponseDto.class);
+                request.getSession().setAttribute("user", userResponseDto);
+                return ResponseEntity.ok().body(userResponseDto);
             }
         }
         Map<String, Object> hm = Map.of("success", false, "message", "Username or password is incorrect.");
