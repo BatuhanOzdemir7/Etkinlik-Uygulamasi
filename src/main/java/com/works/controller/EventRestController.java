@@ -55,4 +55,18 @@ public class EventRestController {
         return eventService.search(q, page, sortDir);
     }
 
+    @PostMapping("join/{id}")
+    public ResponseEntity<Object> joinEvent(@PathVariable Long id){
+        return eventService.joinEvent(id);
+    }
+
+    @DeleteMapping("leave/{id}")
+    public ResponseEntity<Object> leaveEvent(@PathVariable Long id){
+        return eventService.leaveEvent(id);
+    }
+
+    @GetMapping("/detail/{id}")
+    public ResponseEntity<Object> getEventDetail(@PathVariable Long id){
+        return eventService.getEventDetail(id);
+    }
 }

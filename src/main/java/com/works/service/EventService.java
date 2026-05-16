@@ -41,6 +41,8 @@ public class EventService {
         if (optionalUser.isPresent()) {
             // 4. Veritabanından gelen User varlığını, Etkinliğin sahibi olarak atıyoruz
             event.setOwner(optionalUser.get());
+            // 5. Kullanıcıyı varsayılan olarak etkinliğin ilk katılımcısı listesine ekle
+            event.getParticipants().add(optionalUser.get());
         }
         return eventRepository.save(event);
     }
@@ -110,6 +112,54 @@ public class EventService {
         Pageable pageable = PageRequest.of(page, 10, sort);
         Page<Event> eventPage = eventRepository.findByTitleContainsOrDescriptionContainsAllIgnoreCase(q, q, pageable);
         return eventPage;
+    }
+
+    public ResponseEntity<Object> joinEvent(Long eventId) {
+        UserResponseDto sessionUser = (UserResponseDto) request.getSession().getAttribute("user");
+        Optional<Event> optionalEvent = eventRepository.findById(eventId);
+
+        if (optionalEvent.isPresent()) {
+            Event event = optionalEvent.get();
+            User user = userRepository.findById(sessionUser.getCid()).get();
+
+            if (event.getParticipants().contains(user)) {
+                return ResponseEntity.<Object>status(400).body(Map.of("success", false, "message", "Bu etkinliğe zaten katıldınız."));
+            }
+
+            event.getParticipants().add(user);
+            eventRepository.save(event);
+            return ResponseEntity.<Object>ok(Map.of("success", true, "message", "Etkinliğe başarıyla katıldınız."));
+        }
+
+        return ResponseEntity.<Object>status(404).body(Map.of("success", false, "message", "Etkinlik bulunamadı."));
+    }
+
+    public ResponseEntity<Object> leaveEvent(Long eventId) {
+        UserResponseDto sessionUser = (UserResponseDto) request.getSession().getAttribute("user");
+        Optional<Event> optionalEvent = eventRepository.findById(eventId);
+
+        if (optionalEvent.isPresent()) {
+            Event event = optionalEvent.get();
+            User user = userRepository.findById(sessionUser.getCid()).get();
+
+            if (!event.getParticipants().contains(user)) {
+                return ResponseEntity.<Object>status(400).body(Map.of("success", false, "message", "Bu etkinliğe zaten kayıtlı değilsiniz."));
+            }
+
+            event.getParticipants().remove(user);
+            eventRepository.save(event);
+            return ResponseEntity.<Object>ok(Map.of("success", true, "message", "Etkinlik katılımınız iptal edildi."));
+        }
+
+        return ResponseEntity.<Object>status(404).body(Map.of("success", false, "message", "Etkinlik bulunamadı."));
+    }
+
+    public ResponseEntity<Object> getEventDetail(Long id) {
+        return eventRepository.findById(id).map(event ->
+                ResponseEntity.<Object>ok(Map.of("success", true, "event", event))
+        ).orElseGet(() ->
+                ResponseEntity.<Object>status(404).body(Map.of("success", false, "message", "Etkinlik bulunamadı."))
+        );
     }
 
 }
