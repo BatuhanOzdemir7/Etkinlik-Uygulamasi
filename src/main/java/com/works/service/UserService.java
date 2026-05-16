@@ -25,6 +25,13 @@ public class UserService {
     ModelMapper modelMapper = new ModelMapper();
 
     public ResponseEntity register(UserRegisterRequestDto userRegisterRequestDto) {
+        // Güvenlik Kontrolü: Aktif bir oturum var mı?
+        if (request.getSession().getAttribute("user") != null) {
+            return ResponseEntity.<Object>status(400).body(Map.of(
+                    "success", false,
+                    "message", "Zaten giriş yapmış durumdasınız. Yeni kayıt açmak için lütfen önce çıkış (logout) yapın."
+            ));
+        }
         List<User> UserList = UserRepository.findByEmailEqualsOrPhoneEqualsAllIgnoreCase(userRegisterRequestDto.getEmail(), userRegisterRequestDto.getPhone());
         if (UserList.size() > 0) {
             // daha önceden bu email veya phone kullanılmış demektir.
@@ -47,6 +54,13 @@ public class UserService {
 
     // login
     public ResponseEntity login(UserLoginRequestDto UserLoginRequestDto){
+        // Güvenlik Kontrolü: Aktif bir oturum var mı?
+        if (request.getSession().getAttribute("user") != null) {
+            return ResponseEntity.<Object>status(400).body(Map.of(
+                    "success", false,
+                    "message", "Sistemde zaten aktif bir oturumunuz bulunuyor."
+            ));
+        }
         Optional<User> optionalUser = UserRepository.findByEnabledTrueAndEmailIgnoreCaseOrEnabledTrueAndPhoneIgnoreCase(UserLoginRequestDto.getUsername(), UserLoginRequestDto.getUsername());
         if(optionalUser.isPresent()){
             User User = optionalUser.get();
