@@ -102,16 +102,18 @@ public class EventService {
         }
     }
 
-    public Page<Event> eventList(int page){
-        Pageable pageable = Pageable.ofSize(10).withPage(page);
-        return eventRepository.findAll(pageable);
+    public Page<Event> eventList(int page) {
+        return eventRepository.findByStatus(com.works.entity.EventStatus.YAYINDA, PageRequest.of(page, 10));
     }
 
-    public Page<Event> search(String q, int page, String sortDir){
-        Sort sort = Sort.by(sortDir.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC, "eventDate");
-        Pageable pageable = PageRequest.of(page, 10, sort);
-        Page<Event> eventPage = eventRepository.findByTitleContainsOrDescriptionContainsAllIgnoreCase(q, q, pageable);
-        return eventPage;
+    public org.springframework.data.domain.Page<Event> search(String q, int page, String sortDir) {
+        org.springframework.data.domain.Sort sort = org.springframework.data.domain.Sort.by(
+                sortDir.equalsIgnoreCase("desc") ? org.springframework.data.domain.Sort.Direction.DESC : org.springframework.data.domain.Sort.Direction.ASC,
+                "eventDate"
+        );
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, 10, sort);
+
+        return eventRepository.searchActiveEvents(com.works.entity.EventStatus.YAYINDA, q, pageable);
     }
 
     public ResponseEntity<Object> joinEvent(Long eventId) {
@@ -160,6 +162,28 @@ public class EventService {
         ).orElseGet(() ->
                 ResponseEntity.<Object>status(404).body(Map.of("success", false, "message", "Etkinlik bulunamadı."))
         );
+    }
+
+    public ResponseEntity<Object> changeStatus(Long eventId, com.works.entity.EventStatus newStatus) {
+        UserResponseDto sessionUser = (UserResponseDto) request.getSession().getAttribute("user");
+        java.util.Optional<Event> optionalEvent = eventRepository.findById(eventId);
+
+        if (optionalEvent.isPresent()) {
+            Event event = optionalEvent.get();
+
+            // Güvenlik Kontrolü: İşlemi yapan kişi ile etkinliğin sahibi aynı mı?
+            if (!event.getOwner().getCid().equals(sessionUser.getCid())) {
+                return ResponseEntity.<Object>status(403).body(Map.of("success", false, "message", "Bu etkinliğin durumunu değiştirme yetkiniz bulunmuyor."));
+            }
+
+            // Yetki varsa durumu güncelle ve kaydet
+            event.setStatus(newStatus);
+            eventRepository.save(event);
+
+            return ResponseEntity.<Object>ok(Map.of("success", true, "message", "Etkinlik durumu başarıyla güncellendi: " + newStatus));
+        }
+
+        return ResponseEntity.<Object>status(404).body(Map.of("success", false, "message", "Etkinlik bulunamadı."));
     }
 
 }

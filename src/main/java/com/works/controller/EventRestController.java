@@ -69,4 +69,9 @@ public class EventRestController {
     public ResponseEntity<Object> getEventDetail(@PathVariable Long id){
         return eventService.getEventDetail(id);
     }
+
+    @PutMapping("/change-status/{id}")
+    public ResponseEntity<Object> changeStatus(@PathVariable Long id, @RequestParam com.works.entity.EventStatus status) {
+        return eventService.changeStatus(id, status);
+    }
 }

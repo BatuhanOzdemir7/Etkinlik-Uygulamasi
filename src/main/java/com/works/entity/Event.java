@@ -6,6 +6,8 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import java.util.Set;
 import java.util.HashSet;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -52,5 +54,8 @@ public class Event {
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private Set<User> participants = new HashSet<>();
+
+    @Enumerated(EnumType.STRING)
+    private EventStatus status = EventStatus.YAYINDA; // Yeni oluşturulan etkinlikler varsayılan olarak "YAYINDA" başlar.
 
 }
