@@ -2,6 +2,7 @@ package com.works.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "users")
@@ -36,6 +37,7 @@ public class User {
 
     private boolean enabled;
 
+    @JsonIgnore // Bu anotasyon şifrenin JSON olarak dışarı sızmasını engeller
     @Column(length = 1000)
     private String password;
 

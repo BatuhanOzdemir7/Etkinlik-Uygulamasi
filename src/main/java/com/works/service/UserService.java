@@ -60,4 +60,18 @@ public class UserService {
         Map<String, Object> hm = Map.of("success", false, "message", "Username or password is incorrect.");
         return ResponseEntity.badRequest().body(hm);
     }
+
+    // logout
+    public ResponseEntity<Object> logout() {
+        // Mevcut oturumu getir, yoksa yeni bir oturum oluşturma (false parametresi)
+        jakarta.servlet.http.HttpSession session = request.getSession(false);
+
+        if (session != null) {
+            // Oturumu ve bellekteki "user" gibi tüm verileri tamamen yok et
+            session.invalidate();
+        }
+
+        Map<String, Object> hm = Map.of("success", true, "message", "Başarıyla çıkış yapıldı.");
+        return ResponseEntity.ok().body(hm);
+    }
 }

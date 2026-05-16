@@ -28,4 +28,10 @@ public class UserRestController {
     public ResponseEntity login(@Valid @RequestBody UserLoginRequestDto userLoginRequestDto){
         return UserService.login(userLoginRequestDto);
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Object> logout(){
+        // Not: Controller içindeki servis değişkeninin adına göre (UserService veya userService) çağırımı yapmalısın.
+        return UserService.logout();
+    }
 }

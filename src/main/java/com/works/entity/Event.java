@@ -39,4 +39,8 @@ public class Event {
     @JdbcTypeCode(SqlTypes.VARCHAR)
     private String category;
 
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
+    private User owner;
+
 }
