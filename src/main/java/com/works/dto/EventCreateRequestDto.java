@@ -7,6 +7,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import jakarta.validation.constraints.FutureOrPresent;
 
 @Data
 public class EventCreateRequestDto {
@@ -19,7 +20,8 @@ public class EventCreateRequestDto {
     @NotEmpty
     private String description;
 
-    @NotNull
+    @NotNull(message = "Etkinlik tarihi boş bırakılamaz")
+    @FutureOrPresent(message = "Etkinlik tarihi geçmiş bir tarih olamaz")
     private LocalDate eventDate;
 
     @NotNull
