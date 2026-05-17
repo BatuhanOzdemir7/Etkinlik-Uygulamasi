@@ -4,6 +4,7 @@ import com.works.dto.EventCreateRequestDto;
 import com.works.dto.EventUpdateRequestDto;
 import com.works.dto.UserResponseDto;
 import com.works.entity.Event;
+import com.works.entity.EventStatus;
 import com.works.entity.User;
 import com.works.repository.EventRepository;
 import com.works.repository.UserRepository;
@@ -36,8 +37,8 @@ public class EventService {
         Event event = modelMapper.map(eventCreateRequestDto, Event.class);
         //Sisteme giriş yapmış olan kullanıcının bilgilerini Session'dan çekiyoruz
         com.works.dto.UserResponseDto sessionUser = (com.works.dto.UserResponseDto) request.getSession().getAttribute("user");
-        // 3. Optional ile kullanıcının veritabanında hala var olduğundan emin oluyoruz (cid üzerinden)
-        Optional<com.works.entity.User> optionalUser = userRepository.findById(sessionUser.getCid());
+        // 3. Optional ile kullanıcının veritabanında hala var olduğundan emin oluyoruz (id üzerinden)
+        Optional<com.works.entity.User> optionalUser = userRepository.findById(sessionUser.getId());
         if (optionalUser.isPresent()) {
             // 4. Veritabanından gelen User varlığını, Etkinliğin sahibi olarak atıyoruz
             event.setOwner(optionalUser.get());
@@ -63,7 +64,7 @@ public class EventService {
             //veri tabanında var olduğunu doğruladığımız kaydı Optional koruyucu kutusundan çıkarıp gerçek bir Event nesnesine dönüştürür.
             Event event = optionalEvent.get();
             //güvenlik Kontrolü: İşlemi yapan kişinin ID'si ile etkinliği oluşturanın ID'si eşleşiyor mu?
-            if (!event.getOwner().getCid().equals(sessionUser.getCid())) {
+            if (!event.getOwner().getId().equals(sessionUser.getId())) {
                 Map<String, Object> hm = Map.of("success", false, "message", "Bu etkinliği silme yetkiniz bulunmuyor.");
                 return ResponseEntity.status(403).body(hm); // 403 Yasaklandı hatası dönüyoruz
             }
@@ -85,9 +86,8 @@ public class EventService {
             Event existingEvent = optionalEvent.get();
 
             //güvenlik Kontrolü: İşlemi yapan kişinin ID'si ile etkinliği oluşturanın ID'si eşleşiyor mu?
-            if (!existingEvent.getOwner().getCid().equals(sessionUser.getCid())) {
-                Map<String, Object> hm = Map.of("success", false, "message", "Bu etkinliği güncelleme yetkiniz bulunmuyor.");
-                return ResponseEntity.status(403).body(hm); // 403 Yasaklandı hatası dönüyoruz
+            if (!existingEvent.getOwner().getId().equals(sessionUser.getId())) {
+                return ResponseEntity.status(403).body(Map.of("success", false, "message", "Bu etkinliğin durumunu değiştirme yetkiniz bulunmuyor."));
             }
             //kontrolden geçerse verileri kopyala
             Event event = modelMapper.map(eventUpdateRequestDto, Event.class);
@@ -122,7 +122,7 @@ public class EventService {
 
         if (optionalEvent.isPresent()) {
             Event event = optionalEvent.get();
-            User user = userRepository.findById(sessionUser.getCid()).get();
+            User user = userRepository.findById(sessionUser.getId()).get();
 
             if (event.getParticipants().contains(user)) {
                 return ResponseEntity.<Object>status(400).body(Map.of("success", false, "message", "Bu etkinliğe zaten katıldınız."));
@@ -142,7 +142,7 @@ public class EventService {
 
         if (optionalEvent.isPresent()) {
             Event event = optionalEvent.get();
-            User user = userRepository.findById(sessionUser.getCid()).get();
+            User user = userRepository.findById(sessionUser.getId()).get();
 
             if (!event.getParticipants().contains(user)) {
                 return ResponseEntity.<Object>status(400).body(Map.of("success", false, "message", "Bu etkinliğe zaten kayıtlı değilsiniz."));
@@ -172,8 +172,8 @@ public class EventService {
             Event event = optionalEvent.get();
 
             // Güvenlik Kontrolü: İşlemi yapan kişi ile etkinliğin sahibi aynı mı?
-            if (!event.getOwner().getCid().equals(sessionUser.getCid())) {
-                return ResponseEntity.<Object>status(403).body(Map.of("success", false, "message", "Bu etkinliğin durumunu değiştirme yetkiniz bulunmuyor."));
+            if (!event.getOwner().getId().equals(sessionUser.getId())) {
+                return ResponseEntity.status(403).body(Map.of("success", false, "message", "Bu etkinliğin durumunu değiştirme yetkiniz bulunmuyor."));
             }
 
             // Yetki varsa durumu güncelle ve kaydet
@@ -184,6 +184,18 @@ public class EventService {
         }
 
         return ResponseEntity.<Object>status(404).body(Map.of("success", false, "message", "Etkinlik bulunamadı."));
+    }
+
+    public Page<Event> getMyDrafts(int page) {
+        UserResponseDto sessionUser = (UserResponseDto) request.getSession().getAttribute("user");
+        Pageable pageable = PageRequest.of(page, 10);
+        return eventRepository.findByOwnerIdAndStatus(sessionUser.getId(), EventStatus.TASLAK, pageable);
+    }
+
+    public Page<Event> getMyArchives(int page) {
+        UserResponseDto sessionUser = (UserResponseDto) request.getSession().getAttribute("user");
+        Pageable pageable = PageRequest.of(page, 10);
+        return eventRepository.findByOwnerIdAndStatus(sessionUser.getId(), EventStatus.ARSIVLENDI, pageable);
     }
 
 }

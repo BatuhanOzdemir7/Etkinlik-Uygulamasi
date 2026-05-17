@@ -10,7 +10,7 @@ import java.io.Serializable;
  */
 @Data
 public class UserResponseDto {
-    Integer cid;
+    Long id;
     String name;
     String surname;
     String email;

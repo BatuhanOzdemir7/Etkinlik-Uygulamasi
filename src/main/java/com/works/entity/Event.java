@@ -19,7 +19,7 @@ public class Event {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @Column(length = 100)
     private String title;
@@ -56,6 +56,6 @@ public class Event {
     private Set<User> participants = new HashSet<>();
 
     @Enumerated(EnumType.STRING)
-    private EventStatus status = EventStatus.YAYINDA; // Yeni oluşturulan etkinlikler varsayılan olarak "YAYINDA" başlar.
+    private EventStatus status = EventStatus.TASLAK; // Yeni oluşturulan etkinlikler varsayılan olarak "TASLAK" başlar.
 
 }

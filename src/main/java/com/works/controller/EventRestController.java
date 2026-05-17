@@ -74,4 +74,14 @@ public class EventRestController {
     public ResponseEntity<Object> changeStatus(@PathVariable Long id, @RequestParam com.works.entity.EventStatus status) {
         return eventService.changeStatus(id, status);
     }
+
+    @GetMapping("/my-drafts")
+    public Page<Event> getMyDrafts(@RequestParam(defaultValue = "0") int page) {
+        return eventService.getMyDrafts(page);
+    }
+
+    @GetMapping("/my-archives")
+    public Page<Event> getMyArchives(@RequestParam(defaultValue = "0") int page) {
+        return eventService.getMyArchives(page);
+    }
 }
