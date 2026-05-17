@@ -63,4 +63,16 @@ public class GlobalException {
         return ResponseEntity.badRequest().body(error);
     }
 
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Object> handleAllUncaughtException(Exception ex) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("success", false);
+        error.put("message", "Beklenmeyen bir sistem hatası oluştu. Lütfen daha sonra tekrar deneyin.");
+
+        // Geliştirme aşamasında hatanın ne olduğunu konsolda görebilmek için:
+        ex.printStackTrace();
+
+        // 500 Internal Server Error durum kodu ile standart JSON yanıtı dönüyoruz
+        return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
 }
