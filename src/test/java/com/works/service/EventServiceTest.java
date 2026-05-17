@@ -533,4 +533,64 @@ public class EventServiceTest {
         assertEquals("Etkinlik 1", resultPage.getContent().get(0).getTitle());
         assertEquals("Etkinlik 2", resultPage.getContent().get(1).getTitle());
     }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void getParticipants_success() {
+        // Arrange
+        UserResponseDto sessionUser = new UserResponseDto();
+        sessionUser.setId(1L);
+
+        User owner = new User();
+        owner.setId(1L);
+
+        Event event = new Event();
+        event.setId(100);
+        event.setOwner(owner);
+        event.setParticipants(new java.util.HashSet<>());
+        event.getParticipants().add(owner);
+
+        when(request.getSession()).thenReturn(session);
+        when(session.getAttribute("user")).thenReturn(sessionUser);
+        when(eventRepository.findById(100L)).thenReturn(Optional.of(event));
+
+        // Act
+        ResponseEntity<Object> response = eventService.getParticipants(100L);
+
+        // Assert
+        assertEquals(200, response.getStatusCode().value());
+        Map<String, Object> body = (Map<String, Object>) response.getBody();
+        assertNotNull(body);
+        assertEquals(true, body.get("success"));
+        assertNotNull(body.get("participants"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void getParticipants_fails_whenNotOwner() {
+        // Arrange
+        UserResponseDto sessionUser = new UserResponseDto();
+        sessionUser.setId(2L); // Farklı bir kullanıcı sisteme girmiş
+
+        User owner = new User();
+        owner.setId(1L); // Etkinliğin asıl sahibi
+
+        Event event = new Event();
+        event.setId(100);
+        event.setOwner(owner);
+
+        when(request.getSession()).thenReturn(session);
+        when(session.getAttribute("user")).thenReturn(sessionUser);
+        when(eventRepository.findById(100L)).thenReturn(Optional.of(event));
+
+        // Act
+        ResponseEntity<Object> response = eventService.getParticipants(100L);
+
+        // Assert
+        assertEquals(403, response.getStatusCode().value());
+        Map<String, Object> body = (Map<String, Object>) response.getBody();
+        assertNotNull(body);
+        assertEquals(false, body.get("success"));
+        assertEquals("Bu etkinliğin katılımcı listesini görme yetkiniz bulunmuyor.", body.get("message"));
+    }
 }

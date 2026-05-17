@@ -250,5 +250,28 @@ class EventRestControllerTest {
                         .content(objectMapper.writeValueAsString(pastDateRequestDto)))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void testGetParticipants_Success() throws Exception {
+        // Arrange
+        ResponseEntity<Object> mockResponse = ResponseEntity.ok().body(Map.of(
+                "success", true,
+                "participants", new java.util.HashSet<>() // Boş liste taklidi yapıyoruz
+        ));
+
+        Mockito.when(eventService.getParticipants(100L)).thenReturn(mockResponse);
+
+        MockHttpSession mockSession = new MockHttpSession();
+        UserResponseDto sessionUser = new UserResponseDto();
+        sessionUser.setId(1L);
+        mockSession.setAttribute("user", sessionUser);
+
+        // Act and Assert
+        mockMvc.perform(MockMvcRequestBuilders.get("/event/100/participants")
+                        .session(mockSession))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.participants").exists());
+    }
 }
 

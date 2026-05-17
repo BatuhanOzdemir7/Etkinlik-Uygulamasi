@@ -84,4 +84,9 @@ public class EventRestController {
     public Page<Event> getMyArchives(@RequestParam(defaultValue = "0") int page) {
         return eventService.getMyArchives(page);
     }
+
+    @GetMapping("/{id}/participants")
+    public ResponseEntity<Object> getParticipants(@PathVariable Long id) {
+        return eventService.getParticipants(id);
+    }
 }

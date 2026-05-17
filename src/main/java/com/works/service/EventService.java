@@ -194,4 +194,29 @@ public class EventService {
         Pageable pageable = PageRequest.of(page, 10);
         return eventRepository.findByOwnerIdAndStatus(sessionUser.getId(), EventStatus.ARSIVLENDI, pageable);
     }
+
+    public ResponseEntity<Object> getParticipants(Long eventId) {
+        // Oturumdaki aktif kullanıcı bilgilerini alıyoruz
+        UserResponseDto sessionUser = (UserResponseDto) request.getSession().getAttribute("user");
+        Optional<Event> optionalEvent = eventRepository.findById(eventId);
+
+        if (optionalEvent.isPresent()) {
+            Event event = optionalEvent.get();
+
+            // Güvenlik Kontrolü: Sadece etkinliğin sahibi katılımcıları listeleyebilir
+            if (!event.getOwner().getId().equals(sessionUser.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                        "success", false,
+                        "message", "Bu etkinliğin katılımcı listesini görme yetkiniz bulunmuyor."
+                ));
+            }
+
+            // Yetki doğrulandıysa katılımcı listesini başarıyla döndürüyoruz
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "participants", event.getParticipants()
+            ));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("success", false, "message", "Etkinlik bulunamadı."));
+    }
 }
