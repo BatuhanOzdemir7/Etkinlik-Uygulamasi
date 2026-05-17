@@ -198,4 +198,10 @@ public class EventService {
         return eventRepository.findByOwnerIdAndStatus(sessionUser.getId(), EventStatus.ARSIVLENDI, pageable);
     }
 
+    public Page<Event> getMyPublished(int page) {
+        UserResponseDto sessionUser = (UserResponseDto) request.getSession().getAttribute("user");
+        Pageable pageable = PageRequest.of(page, 10);
+        return eventRepository.findByOwnerIdAndStatus(sessionUser.getId(), EventStatus.YAYINDA, pageable);
+    }
+
 }

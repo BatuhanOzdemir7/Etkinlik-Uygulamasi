@@ -84,4 +84,9 @@ public class EventRestController {
     public Page<Event> getMyArchives(@RequestParam(defaultValue = "0") int page) {
         return eventService.getMyArchives(page);
     }
+
+    @GetMapping("/my-published")
+    public Page<Event> getMyPublished(@RequestParam(defaultValue = "0") int page) {
+        return eventService.getMyPublished(page);
+    }
 }
