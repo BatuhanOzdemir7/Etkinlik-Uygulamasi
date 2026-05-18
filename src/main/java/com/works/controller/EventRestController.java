@@ -89,4 +89,10 @@ public class EventRestController {
     public ResponseEntity<Object> getParticipants(@PathVariable Long id) {
         return eventService.getParticipants(id);
     }
+
+    @GetMapping("/control")
+    public void control() {
+        // Artık bu metot SessionFilter koruması altında.
+        // Oturum yoksa filtre 401 Unauthorized fırlatacak, istek buraya ulaşamayacak bile.
+    }
 }
